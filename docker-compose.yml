@@ -1,6 +1,9 @@
 # 今からDocker-composeを記述する宣言
 version: '3'
 
+# ホスト側のボリュームを作る
+volumes:
+  db-data:
 # serviceの親のservices（この中にserviceを書いていく、webとか）
 services:
   # 任意のサービス名
@@ -14,7 +17,32 @@ services:
     volumes:
       # ホストのカレントディレクトリ:コンテナのsample_appでマウント。相対パスで書くこと
       - '.:/sample_app'
+    # 環境変数をセット。config/database.ymlでpasswordは環境変数を参照することとしている
+    environment:
+      - 'DATABASE_PASSWORD=postgres'
     # コマンドの出力結果を整理して表示
     tty: true
     # 入力チャンネルを開く
     stdin_open: true
+    # このwebコンテナはdbのサービスができたら、runする
+    # dbサービスがないとwebサービスは成り立たないから、まずはdbサービスを作ってくださいてこと　
+    depends_on:
+      - db
+    # linksでwebからdbへアクセスできる
+    links:
+      - db
+
+  #任意のサービス名(普通はdb)
+  db:
+    # 既存のpostgresのイメージをdockerHubから持ってくる
+    image: postgres
+    # databaseのデータはコンテナの中に保管されるが、コンテナが消えたらデータも一緒に消えてしまう
+    # 消えてもいいように、ホスト側に保管しておく。
+    # :の右のコンテナ側のdatabase格納場所と:左のホスト側のdb-dataをvolumesでマウントする（つなげる）
+    # db-dataはdockervolumeでvolumeを作成する(上記)
+    volumes:
+      - 'db-data:/var/lib/postgresql/data'
+
+    environment:
+      - 'POSTGRES_USER=postgres'
+      - 'POSTGRES_PASSWORD=postgres'
