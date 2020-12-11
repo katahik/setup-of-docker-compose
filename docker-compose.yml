@@ -1,0 +1,20 @@
+# 今からDocker-composeを記述する宣言
+version: '3'
+
+# serviceの親のservices（この中にserviceを書いていく、webとか）
+services:
+  # 任意のサービス名
+  web:
+    # dockerfileのある場所で使うでbuildこの場合は、dockerfileとymlファイルは同じところにあるから,カレントディレクトリ）
+    build: .
+    ports:
+      # ホスト:コンテナ
+      # portsを3000ポート
+      - '3000:3000'
+    volumes:
+      # ホストのカレントディレクトリ:コンテナのsample_appでマウント。相対パスで書くこと
+      - '.:/sample_app'
+    # コマンドの出力結果を整理して表示
+    tty: true
+    # 入力チャンネルを開く
+    stdin_open: true
